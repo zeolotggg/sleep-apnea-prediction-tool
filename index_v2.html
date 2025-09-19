@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sleep Apnea Risk Prediction Tool</title>
+  <meta name="description" content="Online prediction tool for sleep apnea risk assessment based on anthropometric measurements">
+  <meta name="keywords" content="sleep apnea, prediction, machine learning, biomedical, healthcare">
+  <meta name="author" content="Your Name, Institution">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;line-height:1.6;color:#333;
+      background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:20px}
+    .header{text-align:center;color:#fff;margin-bottom:30px}
+    .header h1{font-size:2.5rem;margin-bottom:10px;font-weight:300}
+    .header p{font-size:1.1rem;opacity:.9;max-width:600px;margin:0 auto 20px}
+    .citation-info{background:rgba(255,255,255,.1);padding:15px;border-radius:10px;margin-bottom:20px;backdrop-filter:blur(10px)}
+    .citation-text{font-size:.9rem;font-style:italic}
+    .main-container{max-width:1200px;margin:0 auto;background:#fff;border-radius:20px;
+      box-shadow:0 20px 40px rgba(0,0,0,.1);overflow:hidden}
+    .content-grid{display:grid;grid-template-columns:1fr 1fr;min-height:600px}
+    .input-panel{padding:40px;background:#f8f9fa;border-right:1px solid #e9ecef}
+    .result-panel{padding:40px;background:#fff}
+    .panel-title{font-size:1.5rem;margin-bottom:30px;color:#495057;text-align:center;font-weight:600}
+    .form-group{margin-bottom:25px}
+    .form-label{display:block;margin-bottom:8px;font-weight:600;color:#495057;font-size:.95rem}
+    .form-input{width:100%;padding:12px 16px;border:2px solid #dee2e6;border-radius:10px;font-size:1rem;transition:all .3s;background:#fff}
+    .form-input:focus{outline:none;border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,.1)}
+    .input-description{font-size:.8rem;color:#6c757d;margin-top:4px}
+    .predict-button{width:100%;padding:16px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      color:#fff;border:none;border-radius:10px;font-size:1.1rem;font-weight:600;cursor:pointer;transition:all .3s;margin-top:20px}
+    .predict-button:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(102,126,234,.3)}
+    .predict-button:active{transform:translateY(0)}
+    .result-card{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:30px;border-radius:15px;text-align:center;margin-bottom:30px}
+    .risk-level{font-size:2rem;font-weight:700;margin-bottom:10px}
+    .risk-description{font-size:1.1rem;opacity:.9}
+    .points-section{background:#f8f9fa;padding:25px;border-radius:10px;margin-bottom:20px}
+    .points-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #e9ecef}
+    .points-label{font-weight:500;color:#495057}
+    .points-value{font-weight:700;color:#667eea}
+    .total-points{border-top:2px solid #667eea;margin-top:10px;padding-top:10px;font-size:1.1rem}
+    .probability-section{margin-bottom:30px}
+    .probability-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #e9ecef}
+    .probability-label{font-weight:600;color:#495057}
+    .probability-value{font-weight:700;font-size:1.1rem}
+    .chart-container{background:#f8f9fa;padding:25px;border-radius:10px;margin-bottom:20px}
+    .chart-title{text-align:center;margin-bottom:20px;font-weight:600;color:#495057}
+    .bar-chart{display:flex;height:200px;gap:30px;align-items:end;justify-content:center}
+    .chart-bar{background:linear-gradient(180deg,#667eea,#764ba2);border-radius:8px 8px 0 0;min-width:100px;position:relative;transition:all .3s;cursor:pointer}
+    .chart-bar:hover{opacity:.8;transform:scale(1.02)}
+    .bar-value{position:absolute;top:-30px;width:100%;text-align:center;font-weight:700;color:#495057}
+    .bar-label{position:absolute;bottom:-25px;width:100%;text-align:center;font-size:.9rem;color:#6c757d;font-weight:600}
+    .footer-info{background:#f8f9fa;padding:20px;text-align:center;font-size:.9rem;color:#6c757d;border-top:1px solid #e9ecef}
+    .disclaimer{background:#fff3cd;border:1px solid #ffeaa7;color:#856404;padding:15px;border-radius:10px;margin-top:20px;font-size:.9rem}
+    .sample-button{width:100%;padding:12px;background:transparent;color:#667eea;border:2px solid #667eea;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;transition:all .3s;margin-top:15px}
+    .sample-button:hover{background:#667eea;color:#fff}
+    @media (max-width:768px){.content-grid{grid-template-columns:1fr}.input-panel{border-right:none;border-bottom:1px solid #e9ecef}.header h1{font-size:2rem}}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Sleep Apnea Risk Prediction Tool</h1>
+    <p>Nomogram-based prediction tool for sleep apnea risk assessment using validated scoring system</p>
+    <div class="citation-info">
+      <div class="citation-text">Scoring is computed by exact linear interpolation from the provided nomogram.</div>
+    </div>
+  </div>
+
+  <div class="main-container">
+    <div class="content-grid">
+      <div class="input-panel">
+        <h2 class="panel-title">Patient Information</h2>
+
+        <div class="form-group">
+          <label class="form-label" for="gender">Gender</label>
+          <select class="form-input" id="gender">
+            <option value="1">Male</option>
+            <option value="0">Female</option>
+          </select>
+          <div class="input-description">Patient's biological sex (nomogram: female=2, male=1)</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="age">Age (years)</label>
+          <input type="number" class="form-input" id="age" value="50" min="10" max="120" step="1"/>
+          <div class="input-description">Nomogram scale: 10–120</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="height">Height (cm)</label>
+          <input type="number" class="form-input" id="height" value="175" min="140" max="200" step="0.1"/>
+          <div class="input-description">Nomogram scale: 200 → 140 (right side equals higher points)</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="weight">Weight (kg)</label>
+          <input type="number" class="form-input" id="weight" value="85" min="30" max="150" step="0.1"/>
+          <div class="input-description">Nomogram scale: 30–150</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="neck_circumference">Neck Circumference (cm)</label>
+          <input type="number" class="form-input" id="neck_circumference" value="40" min="25" max="60" step="0.1"/>
+          <div class="input-description">Nomogram scale: 60 → 25 (right side equals higher points)</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="bmi">BMI (kg/m²)</label>
+          <input type="number" class="form-input" id="bmi" value="27.76" readonly/>
+          <div class="input-description">Automatically calculated from height and weight. Nomogram scale: 10–50</div>
+        </div>
+
+        <button class="predict-button" onclick="performPrediction()">Calculate Risk Prediction</button>
+        <button class="sample-button" onclick="loadSampleData()">Load Sample Data</button>
+
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> This tool is for research purposes only and should not replace professional medical diagnosis.
+        </div>
+      </div>
+
+      <div class="result-panel">
+        <h2 class="panel-title">Prediction Results</h2>
+        <div class="result-card">
+          <div class="risk-level" id="risk-level">Low Risk</div>
+          <div class="risk-description" id="risk-description">
+            Based on the provided measurements, the patient shows low risk for sleep apnea.
+          </div>
+        </div>
+
+        <div class="points-section">
+          <h3 style="margin-bottom:15px;color:#495057;">Nomogram Point Breakdown</h3>
+          <div class="points-item"><span class="points-label">Gender Points:</span><span class="points-value" id="gender-points">0.00</span></div>
+          <div class="points-item"><span class="points-label">Age Points:</span><span class="points-value" id="age-points">0.00</span></div>
+          <div class="points-item"><span class="points-label">BMI Points:</span><span class="points-value" id="bmi-points">0.00</span></div>
+          <div class="points-item"><span class="points-label">Neck Circumference Points:</span><span class="points-value" id="neck-points">0.00</span></div>
+          <div class="points-item"><span class="points-label">Height Points:</span><span class="points-value" id="height-points">0.00</span></div>
+          <div class="points-item"><span class="points-label">Weight Points:</span><span class="points-value" id="weight-points">0.00</span></div>
+          <div class="points-item total-points"><span class="points-label"><strong>Total Points:</strong></span><span class="points-value" id="total-points"><strong>0.00</strong></span></div>
+        </div>
+
+        <div class="probability-section">
+          <h3 style="margin-bottom:15px;color:#495057;">Risk Assessment</h3>
+          <div class="probability-item"><span class="probability-label">Predicted Risk:</span><span class="probability-value" id="risk-probability" style="color:#28a745;">5.0%</span></div>
+          <div class="probability-item"><span class="probability-label">Risk Category:</span><span class="probability-value" id="risk-category" style="color:#28a745;">Low</span></div>
+        </div>
+
+        <div class="chart-container">
+          <div class="chart-title">Risk Probability Visualization</div>
+          <div class="bar-chart">
+            <div class="chart-bar" id="bar-low" style="height:85%;">
+              <div class="bar-value">95.0%</div>
+              <div class="bar-label">Low Risk</div>
+            </div>
+            <div class="chart-bar" id="bar-high" style="height:15%;">
+              <div class="bar-value">5.0%</div>
+              <div class="bar-label">High Risk</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-info">
+      <p><strong>Model Information:</strong> Scores are computed by exact linear interpolation from the provided nomogram axes (pixel-accurate).</p>
+      <p><strong>Last Updated:</strong> September 2025 | <strong>Version:</strong> 2.1.0</p>
+    </div>
+  </div>
+
+  <script>
+    /** =========================
+     *  Nomogram geometry (px) – extracted from the provided figure
+     *  ========================= */
+    const NOMO = {
+      // Points (top) axis: 0–100 mapped on 1521 px
+      pointsLenPx: 1521,
+
+      // Variable axes: [leftLabelValue, rightLabelValue, axisLengthPx]
+      axes: {
+        gender: { left: 2,   right: 1,   lenPx: 267 },   // female=2, male=1
+        neck:   { left: 60,  right: 25,  lenPx: 356 },   // 60 → 25 (right higher points)
+        height: { left: 200, right: 140, lenPx: 484 },   // 200 → 140 (right higher points)
+        weight: { left: 30,  right: 150, lenPx: 1519 },  // 30 → 150
+        age:    { left: 10,  right: 120, lenPx: 1519 },  // 10 → 120
+        bmi:    { left: 10,  right: 50,  lenPx: 1521 }   // 10 → 50
+      },
+
+      // Total Points scale and Risk scale on the nomogram
+      totalPointsMax: 280,          // axis 0–280
+      riskMin: 0.05,                // axis starts at 0.05
+      riskMax: 0.95                 // axis ends at 0.95
+    };
+
+    // Precompute each variable's MAX points (exact)
+    const MAX_POINTS = Object.fromEntries(
+      Object.entries(NOMO.axes).map(([k, ax]) => {
+        const maxPts = ax.lenPx / NOMO.pointsLenPx * 100;
+        return [k, maxPts];
+      })
+    );
+
+    /** Linear fraction along an axis (left→right).
+     *  Handles both increasing and decreasing numeric labels exactly as drawn. */
+    function axisFraction(value, left, right) {
+      // Clamp into axis range (including reversed axes)
+      const vMin = Math.min(left, right);
+      const vMax = Math.max(left, right);
+      const v = Math.max(vMin, Math.min(vMax, value));
+
+      let frac;
+      if (right > left) {
+        // increasing left→right
+        frac = (v - left) / (right - left);
+      } else {
+        // decreasing left→right (e.g., height 200→140)
+        frac = (left - v) / (left - right);
+      }
+      // Limit to [0,1] to be fully safe
+      return Math.max(0, Math.min(1, frac));
+    }
+
+    /** Convert a value on its variable axis to "Points" (top scale) using pixel-true linear mapping. */
+    function valueToPoints(value, axisKey) {
+      const ax = NOMO.axes[axisKey];
+      const frac = axisFraction(value, ax.left, ax.right);
+      const maxPts = MAX_POINTS[axisKey]; // exact max for this variable
+      return frac * maxPts;               // numeric (not rounded)
+    }
+
+    /** Risk from total points using EXACT linear mapping on the Risk axis (0→0.05, 280→0.95). */
+    function totalPointsToRisk(totalPts) {
+      const T = Math.max(0, Math.min(NOMO.totalPointsMax, totalPts)); // clamp to 0–280
+      const p = NOMO.riskMin + (T / NOMO.totalPointsMax) * (NOMO.riskMax - NOMO.riskMin);
+      return p; // 0–1
+    }
+
+    // Auto-calc BMI
+    function calculateBMI() {
+      const height = parseFloat(document.getElementById('height').value);
+      const weight = parseFloat(document.getElementById('weight').value);
+      if (height && weight) {
+        const hM = height / 100;
+        const bmi = weight / (hM * hM);
+        document.getElementById('bmi').value = bmi.toFixed(2);
+      }
+    }
+    document.getElementById('height').addEventListener('input', calculateBMI);
+    document.getElementById('weight').addEventListener('input', calculateBMI);
+
+    function performPrediction() {
+      const genderVal = parseInt(document.getElementById('gender').value, 10); // 1 male, 0 female
+      const age = parseFloat(document.getElementById('age').value);
+      const height = parseFloat(document.getElementById('height').value);
+      const weight = parseFloat(document.getElementById('weight').value);
+      const neck = parseFloat(document.getElementById('neck_circumference').value);
+      const bmi = parseFloat(document.getElementById('bmi').value);
+
+      // Basic validation
+      if ([age, height, weight, neck, bmi].some(v => Number.isNaN(v))) {
+        alert('Please fill in all fields with valid numbers.');
+        return;
+      }
+
+      // --- Compute precise points from the nomogram ---
+      // gender: female=2 → 0 pts; male=1 → max pts
+      const genderAxisValue = (genderVal === 1) ? 1 : 2;
+      const genderPoints = valueToPoints(genderAxisValue, 'gender');
+
+      const agePoints    = valueToPoints(age, 'age');
+      const bmiPoints    = valueToPoints(bmi, 'bmi');
+      const neckPoints   = valueToPoints(neck, 'neck');
+      const heightPoints = valueToPoints(height, 'height');
+      const weightPoints = valueToPoints(weight, 'weight');
+
+      const totalPoints = genderPoints + agePoints + bmiPoints + neckPoints + heightPoints + weightPoints;
+      const risk = totalPointsToRisk(totalPoints);
+
+      updateResults(
+        genderPoints, agePoints, bmiPoints, neckPoints, heightPoints, weightPoints, totalPoints, risk
+      );
+    }
+
+    function updateResults(genderPts, agePts, bmiPts, neckPts, heightPts, weightPts, totalPts, riskProb) {
+      const fmt = (x) => x.toFixed(2);
+
+      // Per-item points
+      document.getElementById('gender-points').textContent = fmt(genderPts);
+      document.getElementById('age-points').textContent    = fmt(agePts);
+      document.getElementById('bmi-points').textContent    = fmt(bmiPts);
+      document.getElementById('neck-points').textContent   = fmt(neckPts);
+      document.getElementById('height-points').textContent = fmt(heightPts);
+      document.getElementById('weight-points').textContent = fmt(weightPts);
+
+      // Total points (not beyond 280 for risk mapping,但仍显示真实总分，括号提示用于风险映射的裁剪值)
+      const clipped = Math.min(NOMO.totalPointsMax, Math.max(0, totalPts));
+      const totalText = (clipped === totalPts)
+        ? fmt(totalPts)
+        : `${fmt(totalPts)} (used: ${fmt(clipped)})`;
+      document.getElementById('total-points').textContent = totalText;
+
+      // Risk display
+      const riskPercentage = (riskProb * 100).toFixed(1);
+      document.getElementById('risk-probability').textContent = `${riskPercentage}%`;
+
+      // Category & styles
+      const riskLevel = document.getElementById('risk-level');
+      const riskDesc  = document.getElementById('risk-description');
+      const riskCat   = document.getElementById('risk-category');
+
+      let category, color, cardColor, description;
+      if (riskProb < 0.15) {
+        category='Low';   color='#28a745'; cardColor='linear-gradient(135deg,#27ae60 0%,#229954 100%)';
+        description='Based on the nomogram analysis, the patient shows low risk for sleep apnea.';
+      } else if (riskProb < 0.50) {
+        category='Moderate'; color='#ffc107'; cardColor='linear-gradient(135deg,#f39c12 0%,#e67e22 100%)';
+        description='Based on the nomogram analysis, the patient shows moderate risk for sleep apnea. Consider further evaluation.';
+      } else {
+        category='High'; color='#dc3545'; cardColor='linear-gradient(135deg,#e74c3c 0%,#c0392b 100%)';
+        description='Based on the nomogram analysis, the patient shows high risk for sleep apnea. Further evaluation is recommended.';
+      }
+      riskLevel.textContent = `${category} Risk`;
+      riskCat.textContent   = category;
+      riskDesc.textContent  = description;
+      riskLevel.parentElement.style.background = cardColor;
+      document.getElementById('risk-probability').style.color = color;
+      document.getElementById('risk-category').style.color = color;
+
+      // Chart
+      const barLow = document.getElementById('bar-low');
+      const barHigh = document.getElementById('bar-high');
+      const lowH  = Math.max((1 - riskProb) * 100, 5);
+      const highH = Math.max(riskProb * 100, 5);
+      barLow.style.height = `${lowH}%`;
+      barHigh.style.height = `${highH}%`;
+      barLow.querySelector('.bar-value').textContent  = `${(100 - parseFloat(riskPercentage)).toFixed(1)}%`;
+      barHigh.querySelector('.bar-value').textContent = `${riskPercentage}%`;
+
+      if (riskProb >= 0.50) {
+        barHigh.style.background='linear-gradient(180deg,#e74c3c,#c0392b)';
+        barLow.style.background='linear-gradient(180deg,#95a5a6,#7f8c8d)';
+      } else if (riskProb >= 0.15) {
+        barHigh.style.background='linear-gradient(180deg,#f39c12,#e67e22)';
+        barLow.style.background='linear-gradient(180deg,#27ae60,#229954)';
+      } else {
+        barLow.style.background='linear-gradient(180deg,#27ae60,#229954)';
+        barHigh.style.background='linear-gradient(180deg,#95a5a6,#7f8c8d)';
+      }
+    }
+
+    function loadSampleData() {
+      const samples = [
+        { gender:1, age:55, height:170, weight:95,  neck:45 }, // High risk
+        { gender:0, age:35, height:165, weight:60,  neck:32 }, // Low risk
+        { gender:1, age:65, height:175, weight:110, neck:48 }, // Very high risk
+        { gender:0, age:45, height:170, weight:75,  neck:38 }, // Moderate risk
+        { gender:1, age:25, height:180, weight:70,  neck:38 }  // Low risk
+      ];
+      const s = samples[Math.floor(Math.random()*samples.length)];
+      document.getElementById('gender').value = s.gender;
+      document.getElementById('age').value    = s.age;
+      document.getElementById('height').value = s.height;
+      document.getElementById('weight').value = s.weight;
+      document.getElementById('neck_circumference').value = s.neck;
+      calculateBMI();
+      setTimeout(performPrediction, 50);
+    }
+
+    // Init
+    calculateBMI();
+    performPrediction();
+  </script>
+</body>
+</html>
