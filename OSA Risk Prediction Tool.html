@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OSA Risk Prediction Tool</title>
+  <style>
+    :root{
+      --navy:#143a63;
+      --navy2:#0f2f52;
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --line:#e6ebf2;
+      --muted:#6b778c;
+      --text:#0b1220;
+
+      --accent:#f08a2a;     /* orange button */
+      --danger:#f36a6a;     /* high risk */
+      --danger2:#ffd9d9;
+      --ok:#2e7d32;
+      --warn:#ef6c00;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      color:var(--text);
+      background:var(--bg);
+    }
+
+    /* A4 print */
+    @page { size: A4; margin: 10mm; }
+    .page{
+      width: 210mm;
+      min-height: 297mm;
+      margin:0 auto;
+      padding: 0;
+      background: transparent;
+    }
+
+    .topbar{
+      background: linear-gradient(180deg, var(--navy) 0%, var(--navy2) 100%);
+      color:#fff;
+      padding:14px 14px 12px 14px;
+      border-bottom:1px solid rgba(255,255,255,.15);
+    }
+    .title{
+      font-size:18px;
+      font-weight:800;
+      letter-spacing:.2px;
+      text-align:center;
+      margin:0;
+    }
+    .subtitle{
+      margin:4px 0 0 0;
+      font-size:11px;
+      text-align:center;
+      opacity:.9;
+      line-height:1.3;
+    }
+    .chiprow{
+      display:flex;
+      justify-content:center;
+      gap:8px;
+      margin-top:8px;
+      flex-wrap:wrap;
+    }
+    .chip{
+      font-size:10px;
+      padding:5px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.18);
+      white-space:nowrap;
+    }
+
+    .content{
+      padding: 10mm;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap:12px;
+      align-items:start;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      box-shadow: 0 6px 18px rgba(20,58,99,.06);
+    }
+    .card h2{
+      margin:0 0 10px 0;
+      font-size:13px;
+      color:#23324a;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .icon{
+      width:20px;height:20px;
+      border-radius:6px;
+      display:inline-grid;
+      place-items:center;
+      background:#eef3fb;
+      border:1px solid var(--line);
+      color:#315a92;
+      font-weight:700;
+      font-size:12px;
+      flex:0 0 auto;
+    }
+
+    .form{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:8px 10px;
+    }
+    .field label{
+      display:block;
+      font-size:11px;
+      color:var(--muted);
+      margin:0 0 4px 0;
+    }
+    .field input,.field select{
+      width:100%;
+      padding:8px 9px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      background:#fff;
+      font-size:12px;
+      outline:none;
+    }
+    .hint{
+      display:block;
+      font-size:10px;
+      color:var(--muted);
+      margin-top:3px;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      margin-top:10px;
+    }
+    button{
+      border:0;
+      border-radius:10px;
+      padding:9px 10px;
+      font-size:12px;
+      font-weight:700;
+      cursor:pointer;
+      flex:1;
+    }
+    button.primary{
+      background:var(--accent);
+      color:#fff;
+      box-shadow: 0 8px 18px rgba(240,138,42,.18);
+    }
+    button.secondary{
+      background:#fff;
+      color:#223;
+      border:1px solid var(--line);
+    }
+
+    .alert{
+      margin-top:10px;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:#fff8f0;
+      color:#7a4a1a;
+      font-size:10px;
+      line-height:1.35;
+    }
+
+    .resultTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, var(--danger2) 0%, #fff 100%);
+    }
+    .riskTitle{
+      font-size:13px;
+      font-weight:800;
+      color:#b71c1c;
+      margin:0;
+    }
+    .riskSub{
+      margin:4px 0 0 0;
+      font-size:10px;
+      color:#8a3a3a;
+      line-height:1.3;
+    }
+    .badge{
+      font-size:11px;
+      font-weight:800;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(183,28,28,.25);
+      background:rgba(183,28,28,.08);
+      color:#b71c1c;
+      white-space:nowrap;
+    }
+
+    .kpis{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    .kpi{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:14px;
+      padding:10px;
+      min-height:72px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+    .kpi .v{
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+    .kpi .l{
+      font-size:10px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:12px;
+      margin-top:10px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+    }
+    th,td{
+      padding:8px 10px;
+      border-bottom:1px solid #f1f4f9;
+      text-align:left;
+      vertical-align:middle;
+    }
+    th{
+      font-size:10px;
+      color:var(--muted);
+      background:#fbfcfe;
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+    tr:last-child td{ border-bottom:0; }
+    td.num{
+      text-align:right;
+      font-variant-numeric: tabular-nums;
+    }
+    tfoot td{
+      background:#fcfdff;
+      font-weight:800;
+    }
+    .footnote{
+      margin-top:8px;
+      font-size:10px;
+      color:var(--muted);
+      line-height:1.35;
+    }
+    .mono{ font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; }
+
+    /* print: keep to one A4 */
+    @media print{
+      .page{ width:auto; min-height:auto; }
+      .content{ padding:0; }
+      button{ display:none; }
+      body{ background:#fff; }
+      .card{ box-shadow:none; }
+      .topbar{ border-radius:0; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="topbar">
+      <p class="title">OSA Risk Prediction Tool</p>
+      <p class="subtitle">Web-based nomogram for OSA risk prediction and patient stratification</p>
+      <div class="chiprow">
+        <span class="chip">Logistic regression</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="grid">
+        <div class="card">
+          <h2><span class="icon">i</span>Patient Information</h2>
+
+          <div class="form">
+            <div class="field">
+              <label>Gender</label>
+              <select id="gender">
+                <option value="1" selected>Male</option>
+                <option value="2">Female</option>
+              </select>
+              <span class="hint">Code: 1=Male, 2=Female</span>
+            </div>
+
+            <div class="field">
+              <label>Age (years)</label>
+              <input id="age" type="number" step="1" value="46" />
+              <span class="hint">10–120</span>
+            </div>
+
+            <div class="field">
+              <label>BMI (kg/m²)</label>
+              <input id="bmi" type="number" step="0.01" value="28.72" />
+              <span class="hint">10–55</span>
+            </div>
+
+            <div class="field">
+              <label>Neutrophil (×10⁹/L)</label>
+              <input id="neut" type="number" step="0.01" value="3.4" />
+              <span class="hint">0.5–7</span>
+            </div>
+
+            <div class="field">
+              <label>RDW (%)</label>
+              <input id="rdw" type="number" step="0.01" value="12.4" />
+              <span class="hint">11–15</span>
+            </div>
+
+            <div class="field">
+              <label>Hemoglobin (g/L)</label>
+              <input id="hgb" type="number" step="1" value="168" />
+              <span class="hint">120–175</span>
+            </div>
+
+            <div class="field">
+              <label>Lymphocyte (×10⁹/L)</label>
+              <input id="lymph" type="number" step="0.01" value="1.77" />
+              <span class="hint">0–4</span>
+            </div>
+
+            <div class="field">
+              <label>Monocyte (×10⁹/L)</label>
+              <input id="mono" type="number" step="0.01" value="0.47" />
+              <span class="hint">0–1</span>
+            </div>
+
+            <div class="field">
+              <label>Platelet (×10⁹/L)</label>
+              <input id="plt" type="number" step="1" value="161" />
+              <span class="hint">80–350</span>
+            </div>
+
+            <div class="field">
+              <label>MPV (fL)</label>
+              <input id="mpv" type="number" step="0.01" value="11.4" />
+              <span class="hint">7–13.4</span>
+            </div>
+          </div>
+
+          <div class="row">
+            <button id="calc" class="primary">Calculate</button>
+            <button id="reset" class="secondary">Reset</button>
+          </div>
+
+          <div class="alert">
+            This tool provides risk estimates and does not establish a diagnosis. Use in conjunction with clinical assessment. PSG/HSAT should be considered when indicated.
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="icon">↗</span>Prediction Results</h2>
+
+          <div class="resultTop" id="riskPanel">
+            <div>
+              <p class="riskTitle" id="riskTitle">High risk</p>
+              <p class="riskSub" id="riskSub">High predicted probability. Consider formal sleep evaluation (e.g., PSG/HSAT) if indicated.</p>
+            </div>
+            <div class="badge" id="riskBadge">High</div>
+          </div>
+
+          <div class="kpis">
+            <div class="kpi">
+              <div class="v" id="riskPct">--</div>
+              <div class="l">Predicted risk</div>
+            </div>
+            <div class="kpi">
+              <div class="v" id="lpVal">--</div>
+              <div class="l">Linear predictor (LP)</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr><th>Item</th><th class="num">Points</th></tr>
+            </thead>
+            <tbody id="rows"></tbody>
+            <tfoot>
+              <tr><td>Total points</td><td class="num" id="totalPts">--</td></tr>
+            </tfoot>
+          </table>
+
+          <div class="footnote">
+            Computation: Nomogram → total points → LP → probability.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // --- SVG-calibrated constants (from Nomogram.svg) ---
+  const POINTS_X0 = 261.60;
+  const POINTS_LEN = 819.20; // 1080.80 - 261.60
+
+  // variable axis definitions: x0, len, [min,max]
+  // gender is categorical: female at x0, male at x0+len
+  const AXES = {
+    gender: { x0: 261.60, len: 84.11, range: null, label: "Gender" },
+    age:    { x0: 261.60, len: 455.71, range: [10,120], label: "Age" },
+    bmi:    { x0: 261.60, len: 813.22, range: [10,55], label: "BMI" },
+    neut:   { x0: 261.60, len: 110.29, range: [0.5,7], label: "Neutrophil" },
+    rdw:    { x0: 261.60, len: 136.33, range: [11,15], label: "RDW" },
+    hgb:    { x0: 261.60, len: 819.20, range: [120,175], label: "Hemoglobin" },
+    lymph:  { x0: 261.60, len: 248.58, range: [0,4], label: "Lymphocyte" },
+    mono:   { x0: 261.60, len: 110.83, range: [0,1], label: "Monocyte" },
+    plt:    { x0: 261.60, len: 64.23,  range: [80,350], label: "Platelet" },
+    mpv:    { x0: 261.60, len: 62.78,  range: [7,13.4], label: "MPV" },
+  };
+
+  const TOTAL_RANGE = [0,240];
+
+  // Linear Predictor axis: x=544.78 -> 1054.39 corresponds -5 -> 9
+  const LP_X0 = 544.78;
+  const LP_LEN = 509.61;
+  const LP_RANGE = [-5, 9];
+
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+  function xToPoints(x){
+    return (x - POINTS_X0) / POINTS_LEN * 100.0;
+  }
+
+  function valueToX(axisKey, value, genderCode){
+    const a = AXES[axisKey];
+    if(axisKey === "gender"){
+      // Code: 1=Male, 2=Female
+      return (parseInt(genderCode,10) === 1) ? (a.x0 + a.len) : a.x0;
+    }
+    const lo = a.range[0], hi = a.range[1];
+    const v = clamp(Number(value), lo, hi);
+    return a.x0 + (v - lo) / (hi - lo) * a.len;
+  }
+
+  function setRiskUI(risk){
+    const badge = document.getElementById("riskBadge");
+    const title = document.getElementById("riskTitle");
+    const sub = document.getElementById("riskSub");
+    const panel = document.getElementById("riskPanel");
+
+    // default theme = high
+    let level = "High";
+    let titleText = "High risk";
+    let subText = "High predicted probability. Consider formal sleep evaluation (e.g., PSG/HSAT) if indicated.";
+
+    if(risk < 0.30){
+      level = "Low";
+      titleText = "Low risk";
+      subText = "Low predicted probability. Consider symptoms and comorbidities.";
+      panel.style.background = "linear-gradient(180deg, #e8f5e9 0%, #fff 100%)";
+      badge.style.borderColor = "rgba(46,125,50,.25)";
+      badge.style.background = "rgba(46,125,50,.10)";
+      badge.style.color = "#2e7d32";
+      title.style.color = "#2e7d32";
+      sub.style.color = "#3a6b3c";
+    }else if(risk < 0.70){
+      level = "Intermediate";
+      titleText = "Intermediate risk";
+      subText = "Consider additional screening and follow-up when clinically indicated.";
+      panel.style.background = "linear-gradient(180deg, #fff3e0 0%, #fff 100%)";
+      badge.style.borderColor = "rgba(239,108,0,.25)";
+      badge.style.background = "rgba(239,108,0,.10)";
+      badge.style.color = "#ef6c00";
+      title.style.color = "#ef6c00";
+      sub.style.color = "#8a5a1c";
+    }else{
+      level = "High";
+      titleText = "High risk";
+      subText = "High predicted probability. Consider formal sleep evaluation (e.g., PSG/HSAT) if indicated.";
+      panel.style.background = "linear-gradient(180deg, var(--danger2) 0%, #fff 100%)";
+      badge.style.borderColor = "rgba(183,28,28,.25)";
+      badge.style.background = "rgba(183,28,28,.08)";
+      badge.style.color = "#b71c1c";
+      title.style.color = "#b71c1c";
+      sub.style.color = "#8a3a3a";
+    }
+
+    badge.textContent = level;
+    title.textContent = titleText;
+    sub.textContent = subText;
+  }
+
+  function compute(){
+    const gender = parseInt(document.getElementById("gender").value,10);
+    const inputs = {
+      gender,
+      age:   Number(document.getElementById("age").value),
+      bmi:   Number(document.getElementById("bmi").value),
+      neut:  Number(document.getElementById("neut").value),
+      rdw:   Number(document.getElementById("rdw").value),
+      hgb:   Number(document.getElementById("hgb").value),
+      lymph: Number(document.getElementById("lymph").value),
+      mono:  Number(document.getElementById("mono").value),
+      plt:   Number(document.getElementById("plt").value),
+      mpv:   Number(document.getElementById("mpv").value),
+    };
+
+    const order = ["gender","age","bmi","neut","rdw","hgb","lymph","mono","plt","mpv"];
+    const rows = [];
+    let totalPts = 0;
+
+    for(const k of order){
+      const x = valueToX(k, inputs[k], gender);
+      const pts = xToPoints(x);
+      rows.push({name: AXES[k].label, pts});
+      totalPts += pts;
+    }
+
+    const totalClamped = clamp(totalPts, TOTAL_RANGE[0], TOTAL_RANGE[1]);
+
+    const totalX = POINTS_X0 + (totalClamped - TOTAL_RANGE[0]) / (TOTAL_RANGE[1] - TOTAL_RANGE[0]) * POINTS_LEN;
+
+    const lp = LP_RANGE[0] + (totalX - LP_X0) / LP_LEN * (LP_RANGE[1] - LP_RANGE[0]);
+
+    const risk = 1.0 / (1.0 + Math.exp(-lp));
+
+    const tbody = document.getElementById("rows");
+    tbody.innerHTML = "";
+    for(const r of rows){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${r.name}</td><td class="num">${r.pts.toFixed(2)}</td>`;
+      tbody.appendChild(tr);
+    }
+
+    document.getElementById("totalPts").textContent = totalClamped.toFixed(2);
+    document.getElementById("lpVal").textContent = lp.toFixed(2);
+    document.getElementById("riskPct").textContent = (risk*100).toFixed(1) + "%";
+
+    setRiskUI(risk);
+  }
+
+  document.getElementById("calc").addEventListener("click", compute);
+  document.getElementById("reset").addEventListener("click", () => location.reload());
+  compute();
+</script>
+</body>
+</html>
