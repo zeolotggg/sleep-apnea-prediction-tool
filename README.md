@@ -1,2 +1,2 @@
-# sleep-apnea-prediction-tool
-Sleep Apnea Risk Prediction Tool based on Nomogram
+# OSA Risk Prediction Tool
+OSA Risk Prediction Tool based on Nomogram
