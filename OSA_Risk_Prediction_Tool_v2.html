@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OSA Risk Prediction Tool</title>
+  <style>
+    :root{
+      --navy:#143a63;
+      --navy2:#0f2f52;
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --line:#e6ebf2;
+      --muted:#6b778c;
+      --text:#0b1220;
+
+      --accent:#f08a2a;     /* orange button */
+      --danger:#f36a6a;     /* high risk */
+      --danger2:#ffd9d9;
+      --ok:#2e7d32;
+      --warn:#ef6c00;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      color:var(--text);
+      background:var(--bg);
+    }
+
+    /* A4 print */
+    @page { size: A4; margin: 10mm; }
+    .page{
+      width: 210mm;
+      min-height: 297mm;
+      margin:0 auto;
+      padding: 0;
+      background: transparent;
+    }
+
+    .topbar{
+      background: linear-gradient(180deg, var(--navy) 0%, var(--navy2) 100%);
+      color:#fff;
+      padding:14px 14px 12px 14px;
+      border-bottom:1px solid rgba(255,255,255,.15);
+    }
+    .title{
+      font-size:18px;
+      font-weight:800;
+      letter-spacing:.2px;
+      text-align:center;
+      margin:0;
+    }
+    .subtitle{
+      margin:4px 0 0 0;
+      font-size:11px;
+      text-align:center;
+      opacity:.9;
+      line-height:1.3;
+    }
+    .chiprow{
+      display:flex;
+      justify-content:center;
+      gap:8px;
+      margin-top:8px;
+      flex-wrap:wrap;
+    }
+    .chip{
+      font-size:10px;
+      padding:5px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.18);
+      white-space:nowrap;
+    }
+
+    .content{
+      padding: 10mm;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap:12px;
+      align-items:start;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      box-shadow: 0 6px 18px rgba(20,58,99,.06);
+    }
+    .card h2{
+      margin:0 0 10px 0;
+      font-size:13px;
+      color:#23324a;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .icon{
+      width:20px;height:20px;
+      border-radius:6px;
+      display:inline-grid;
+      place-items:center;
+      background:#eef3fb;
+      border:1px solid var(--line);
+      color:#315a92;
+      font-weight:700;
+      font-size:12px;
+      flex:0 0 auto;
+    }
+
+    .form{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:8px 10px;
+    }
+    .field label{
+      display:block;
+      font-size:11px;
+      color:var(--muted);
+      margin:0 0 4px 0;
+    }
+    .field input,.field select{
+      width:100%;
+      padding:8px 9px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      background:#fff;
+      font-size:12px;
+      outline:none;
+    }
+    .hint{
+      display:block;
+      font-size:10px;
+      color:var(--muted);
+      margin-top:3px;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      margin-top:10px;
+    }
+    button{
+      border:0;
+      border-radius:10px;
+      padding:9px 10px;
+      font-size:12px;
+      font-weight:700;
+      cursor:pointer;
+      flex:1;
+    }
+    button.primary{
+      background:var(--accent);
+      color:#fff;
+      box-shadow: 0 8px 18px rgba(240,138,42,.18);
+    }
+    button.secondary{
+      background:#fff;
+      color:#223;
+      border:1px solid var(--line);
+    }
+
+    .alert{
+      margin-top:10px;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:#fff8f0;
+      color:#7a4a1a;
+      font-size:10px;
+      line-height:1.35;
+    }
+    .alert.warn{
+      background:#fff3e0;
+      border-color:#ffd9b3;
+      color:#8a4a00;
+    }
+    .hint.warn{
+      color:#c25a00;
+      font-weight:700;
+    }
+
+    .resultTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, var(--danger2) 0%, #fff 100%);
+    }
+    .riskTitle{
+      font-size:13px;
+      font-weight:800;
+      color:#b71c1c;
+      margin:0;
+    }
+    .riskSub{
+      margin:4px 0 0 0;
+      font-size:10px;
+      color:#8a3a3a;
+      line-height:1.3;
+    }
+    .badge{
+      font-size:11px;
+      font-weight:800;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(183,28,28,.25);
+      background:rgba(183,28,28,.08);
+      color:#b71c1c;
+      white-space:nowrap;
+    }
+
+    .kpis{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    .kpi{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:14px;
+      padding:10px;
+      min-height:72px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+    .kpi .v{
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+    .kpi .l{
+      font-size:10px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:12px;
+      margin-top:10px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+    }
+    th,td{
+      padding:8px 10px;
+      border-bottom:1px solid #f1f4f9;
+      text-align:left;
+      vertical-align:middle;
+    }
+    th{
+      font-size:10px;
+      color:var(--muted);
+      background:#fbfcfe;
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+    tr:last-child td{ border-bottom:0; }
+    td.num{
+      text-align:right;
+      font-variant-numeric: tabular-nums;
+    }
+    tfoot td{
+      background:#fcfdff;
+      font-weight:800;
+    }
+    .footnote{
+      margin-top:8px;
+      font-size:10px;
+      color:var(--muted);
+      line-height:1.35;
+    }
+    .mono{ font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; }
+
+    @media print {
+      body { background: #fff; }
+      .page { box-shadow: none; border: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page">
+    <div class="topbar">
+      <p class="title">OSA Risk Prediction Tool</p>
+      <p class="subtitle">Web-based nomogram for OSA risk prediction and patient stratification</p>
+      <div class="chiprow">
+        <span class="chip">Logistic regression</span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="grid">
+        <div class="card">
+          <h2><span class="icon">i</span>Patient Information</h2>
+
+          <div class="form">
+            <div class="field">
+              <label>Gender</label>
+              <select id="gender">
+                <option value="1" selected>Male</option>
+                <option value="2">Female</option>
+              </select>
+              <span class="hint">Code: 1=Male, 2=Female</span>
+            </div>
+
+            <div class="field">
+              <label>Age (years)</label>
+              <input id="age" type="number" step="1" value="45" />
+              <span class="hint">10–100</span>
+            </div>
+
+            <div class="field">
+              <label>BMI (kg/m²)</label>
+              <input id="bmi" type="number" step="0.01" value="26.5" />
+              <span class="hint">10–55</span>
+            </div>
+
+            <div class="field">
+              <label>Hemoglobin (g/L)</label>
+              <input id="hgb" type="number" step="1" value="149" />
+              <span class="hint" id="hgbHint">Raw value; auto z-scored by sex</span>
+            </div>
+
+            <div class="field">
+              <label>Lymphocyte (×10⁹/L)</label>
+              <input id="lymph" type="number" step="0.01" value="2.0" />
+              <span class="hint">0–5</span>
+            </div>
+
+            <div class="field">
+              <label>RDW (%)</label>
+              <input id="rdw" type="number" step="0.01" value="12.5" />
+              <span class="hint">10–18</span>
+            </div>
+
+            <div class="field">
+              <label>MCH (pg)</label>
+              <input id="mch" type="number" step="0.1" value="28" />
+              <span class="hint">24–36</span>
+            </div>
+
+            <div class="field">
+              <label>Platelet (×10⁹/L)</label>
+              <input id="plt" type="number" step="1" value="250" />
+              <span class="hint">50–450</span>
+            </div>
+
+            <div class="field">
+              <label>MPV (fL)</label>
+              <input id="mpv" type="number" step="0.1" value="9.5" />
+              <span class="hint">6–15</span>
+            </div>
+          </div>
+
+          <div class="row">
+            <button id="calc" class="primary">Calculate</button>
+            <button id="reset" class="secondary">Reset</button>
+          </div>
+
+          <div class="alert warn" id="hbAlert" style="display:none">
+            <!-- populated by JS when |Hb z-score| is large -->
+          </div>
+
+          <div class="alert">
+            This tool provides risk estimates and does not establish a diagnosis. Use in conjunction with clinical assessment. PSG/HSAT should be considered when indicated.
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="icon">↗</span>Prediction Results</h2>
+
+          <div class="resultTop" id="riskPanel">
+            <div>
+              <p class="riskTitle" id="riskTitle">High risk</p>
+              <p class="riskSub" id="riskSub">High predicted probability. Consider formal sleep evaluation (e.g., PSG/HSAT) if indicated.</p>
+            </div>
+            <div class="badge" id="riskBadge">High</div>
+          </div>
+
+          <div class="kpis">
+            <div class="kpi">
+              <div class="v" id="riskPct">--</div>
+              <div class="l">Predicted risk</div>
+            </div>
+            <div class="kpi">
+              <div class="v" id="lpVal">--</div>
+              <div class="l">Linear predictor (LP)</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr><th>Item</th><th class="num">Points</th></tr>
+            </thead>
+            <tbody id="rows"></tbody>
+            <tfoot>
+              <tr><td>Total points</td><td class="num" id="totalPts">--</td></tr>
+            </tfoot>
+          </table>
+
+          <div class="footnote">
+            Computation: Nomogram → total points → LP → probability.<br>
+            <b>Note on Hemoglobin:</b> The model uses a sex-specific z-score
+            (Male: μ=152.6181, σ=5.7128;&nbsp; Female: μ=136.1800, σ=4.9982),
+            so the same raw Hb value can score very differently for males vs.
+            females. e.g. Hb=150 g/L → z=−0.46 in males (typical) but z=+2.77
+            in females (top 0.3%), and the latter contributes far more points.
+            This reflects the clinical reasoning that Hb unusually high
+            <i>for one's sex</i> suggests chronic hypoxia.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ============================================================
+  // SVG-calibrated constants (extracted from Nomogram_改.svg)
+  //   viewBox: 0 0 1152 1008
+  //   All x0/len values come directly from <path class="st3"> baselines.
+  // ============================================================
+
+  // ---- Points axis (top ruler): 0–100 ----
+  // <path d="M322.3,91.5h758.5"/>  ticks 0,10,...,100
+  const POINTS_X0  = 322.3;
+  const POINTS_LEN = 758.5;
+
+  // ---- Hemoglobin sex-specific z-score parameters (from training set) ----
+  // Source: nomo_R_LASSO9_Hb_zscore_v3.R, "第六.五部分"
+  const HB_PARAMS = {
+    male:   { mean: 152.6181, sd: 5.7128 },
+    female: { mean: 136.1800, sd: 4.9982 }
+  };
+
+  // ---- Variable axis definitions extracted from SVG ----
+  // Each entry corresponds to one row in the nomogram.
+  // x0 = baseline left x, len = baseline width, range = [min, max] of tick labels.
+  // Gender is categorical: Female at x0 (lower tick), Male at x0+len (upper tick).
+  const AXES = {
+    gender: { x0: 322.3, len:  91.6, range: null,        label: "Gender"             }, // M159 baseline
+    age:    { x0: 322.3, len: 344.6, range: [10, 100],   label: "Age"                }, // M226.6
+    bmi:    { x0: 322.3, len: 618.9, range: [10, 55],    label: "BMI"                }, // M294.1
+    hgb_z:  { x0: 322.3, len: 758.5, range: [-3, 3],     label: "Hemoglobin (z)"     }, // M361.7
+    lymph:  { x0: 322.3, len: 162.6, range: [0, 5],      label: "Lymphocyte"         }, // M429.2
+    rdw:    { x0: 322.3, len:  97.3, range: [10, 18],    label: "RDW"                }, // M496.8
+    mch:    { x0: 322.3, len: 374.0, range: [24, 36],    label: "MCH"                }, // M564.4
+    plt:    { x0: 322.3, len:  58.7, range: [50, 450],   label: "Platelet"           }, // M631.9 H381
+    mpv:    { x0: 322.3, len:  62.1, range: [6, 15],     label: "MPV"                }, // M699.5
+  };
+
+  // ---- Total Points axis: 0–240 ----
+  // <path d="M322.3,767h758.5"/>  ticks 0,20,...,240 (13 ticks)
+  const TOTAL_X0    = 322.3;
+  const TOTAL_LEN   = 758.5;
+  const TOTAL_RANGE = [0, 240];
+
+  // ---- Linear Predictor axis: -6 to 10 ----
+  // <path d="M537.3,834.6h497"/>  ticks -6,-4,...,10 (9 ticks, 62.1 px apart)
+  const LP_X0    = 537.3;
+  const LP_LEN   = 497.0;
+  const LP_RANGE = [-6, 10];
+
+  // ============================================================
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+  /** Approximation of the error function (Abramowitz & Stegun 7.1.26) */
+  function erf(x) {
+    const a1 =  0.254829592, a2 = -0.284496736, a3 =  1.421413741;
+    const a4 = -1.453152027, a5 =  1.061405429, p  =  0.3275911;
+    const sign = x < 0 ? -1 : 1;
+    x = Math.abs(x);
+    const t = 1.0 / (1.0 + p * x);
+    const y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t * Math.exp(-x*x);
+    return sign * y;
+  }
+  /** Standard normal CDF → percentile (0-100) */
+  function zToPercentile(z) {
+    return 50 * (1 + erf(z / Math.SQRT2));
+  }
+
+  /** Map an x-coordinate on any variable axis to the corresponding
+   *  Points value using the top ruler (0–100). */
+  function xToPoints(x) {
+    return (x - POINTS_X0) / POINTS_LEN * 100.0;
+  }
+
+  /** Compute sex-specific Hb z-score from raw g/L value. */
+  function hbToZ(hbRaw, genderCode) {
+    const p = (parseInt(genderCode, 10) === 1) ? HB_PARAMS.male : HB_PARAMS.female;
+    return (Number(hbRaw) - p.mean) / p.sd;
+  }
+
+  /** Map a clinical value (or gender code) to an x-coordinate on
+   *  the variable's own axis. */
+  function valueToX(axisKey, value, genderCode) {
+    const a = AXES[axisKey];
+    if (axisKey === "gender") {
+      // Female at x0 (lower tick), Male at x0+len (upper tick)
+      return (parseInt(genderCode, 10) === 1) ? (a.x0 + a.len) : a.x0;
+    }
+    const lo = a.range[0], hi = a.range[1];
+    const v  = clamp(Number(value), lo, hi);
+    return a.x0 + (v - lo) / (hi - lo) * a.len;
+  }
+
+  function setRiskUI(risk) {
+    const badge = document.getElementById("riskBadge");
+    const title = document.getElementById("riskTitle");
+    const sub   = document.getElementById("riskSub");
+    const panel = document.getElementById("riskPanel");
+
+    let level, titleText, subText;
+
+    if (risk < 0.30) {
+      level     = "Low";
+      titleText = "Low risk";
+      subText   = "Low predicted probability. Consider symptoms and comorbidities.";
+      panel.style.background    = "linear-gradient(180deg, #e8f5e9 0%, #fff 100%)";
+      badge.style.borderColor   = "rgba(46,125,50,.25)";
+      badge.style.background    = "rgba(46,125,50,.10)";
+      badge.style.color         = "#2e7d32";
+      title.style.color         = "#2e7d32";
+      sub.style.color           = "#3a6b3c";
+    } else if (risk < 0.70) {
+      level     = "Intermediate";
+      titleText = "Intermediate risk";
+      subText   = "Consider additional screening and follow-up when clinically indicated.";
+      panel.style.background    = "linear-gradient(180deg, #fff3e0 0%, #fff 100%)";
+      badge.style.borderColor   = "rgba(239,108,0,.25)";
+      badge.style.background    = "rgba(239,108,0,.10)";
+      badge.style.color         = "#ef6c00";
+      title.style.color         = "#ef6c00";
+      sub.style.color           = "#8a5a1c";
+    } else {
+      level     = "High";
+      titleText = "High risk";
+      subText   = "High predicted probability. Consider formal sleep evaluation (e.g., PSG/HSAT) if indicated.";
+      panel.style.background    = "linear-gradient(180deg, var(--danger2) 0%, #fff 100%)";
+      badge.style.borderColor   = "rgba(183,28,28,.25)";
+      badge.style.background    = "rgba(183,28,28,.08)";
+      badge.style.color         = "#b71c1c";
+      title.style.color         = "#b71c1c";
+      sub.style.color           = "#8a3a3a";
+    }
+
+    badge.textContent = level;
+    title.textContent = titleText;
+    sub.textContent   = subText;
+  }
+
+  function compute() {
+    const gender = parseInt(document.getElementById("gender").value, 10);
+
+    // Raw inputs
+    const hgbRaw = Number(document.getElementById("hgb").value);
+    // Sex-specific z-score for Hb (this is what feeds the nomogram axis)
+    const hgbZ   = hbToZ(hgbRaw, gender);
+
+    // ---- Update Hb hint + warning ----
+    const sexLabel = (gender === 1) ? "Male" : "Female";
+    const pct      = zToPercentile(hgbZ);
+    const pctStr   = pct < 1   ? "<1st"
+                   : pct > 99  ? ">99th"
+                                : pct.toFixed(0) + "th";
+    const zSign    = hgbZ >= 0 ? "+" : "";
+    const hint     = document.getElementById("hgbHint");
+    hint.textContent = `z = ${zSign}${hgbZ.toFixed(2)} · ${pctStr} percentile (${sexLabel})`;
+    hint.classList.toggle("warn", Math.abs(hgbZ) > 2);
+
+    const hbAlert = document.getElementById("hbAlert");
+    if (Math.abs(hgbZ) > 2) {
+      const direction = hgbZ > 0 ? "unusually <b>high</b>" : "unusually <b>low</b>";
+      const effect    = hgbZ > 0 ? "<b>strongly increases</b>" : "<b>decreases</b>";
+      hbAlert.style.display = "block";
+      hbAlert.innerHTML =
+        `⚠️ Hemoglobin = ${hgbRaw} g/L is ${direction} for a ${sexLabel.toLowerCase()} ` +
+        `(z = ${zSign}${hgbZ.toFixed(2)}, ${pctStr} percentile of the training cohort). ` +
+        `Because the model uses a sex-specific Hb z-score, this ${effect} the predicted risk ` +
+        `and can dominate the gender effect. See the note below the results table.`;
+    } else {
+      hbAlert.style.display = "none";
+      hbAlert.innerHTML = "";
+    }
+
+    const inputs = {
+      gender,
+      age:   Number(document.getElementById("age").value),
+      bmi:   Number(document.getElementById("bmi").value),
+      hgb_z: hgbZ,
+      lymph: Number(document.getElementById("lymph").value),
+      rdw:   Number(document.getElementById("rdw").value),
+      mch:   Number(document.getElementById("mch").value),
+      plt:   Number(document.getElementById("plt").value),
+      mpv:   Number(document.getElementById("mpv").value),
+    };
+
+    const order = ["gender","age","bmi","hgb_z","lymph","rdw","mch","plt","mpv"];
+    const rows  = [];
+    let totalPts = 0;
+
+    for (const k of order) {
+      const x   = valueToX(k, inputs[k], gender);
+      const pts = xToPoints(x);
+      // Display label: show the raw Hb value next to "Hemoglobin (z)" so the
+      // user can see both the input and the resulting z.
+      let displayName = AXES[k].label;
+      if (k === "hgb_z") {
+        displayName = `Hemoglobin (z = ${hgbZ.toFixed(2)})`;
+      }
+      rows.push({ name: displayName, pts });
+      totalPts += pts;
+    }
+
+    // Map totalPts → x on the Total Points axis
+    const totalClamped = clamp(totalPts, TOTAL_RANGE[0], TOTAL_RANGE[1]);
+    const totalX = TOTAL_X0 + (totalClamped - TOTAL_RANGE[0])
+                   / (TOTAL_RANGE[1] - TOTAL_RANGE[0]) * TOTAL_LEN;
+
+    // Map x → LP using the Linear Predictor axis
+    const lp = LP_RANGE[0]
+             + (totalX - LP_X0) / LP_LEN * (LP_RANGE[1] - LP_RANGE[0]);
+
+    // Logistic transform → probability
+    const risk = 1.0 / (1.0 + Math.exp(-lp));
+
+    // ---- render ----
+    const tbody = document.getElementById("rows");
+    tbody.innerHTML = "";
+    for (const r of rows) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${r.name}</td><td class="num">${r.pts.toFixed(2)}</td>`;
+      tbody.appendChild(tr);
+    }
+
+    document.getElementById("totalPts").textContent = totalClamped.toFixed(2);
+    document.getElementById("lpVal").textContent     = lp.toFixed(2);
+    document.getElementById("riskPct").textContent   = (risk * 100).toFixed(1) + "%";
+
+    setRiskUI(risk);
+  }
+
+  document.getElementById("calc").addEventListener("click", compute);
+  document.getElementById("reset").addEventListener("click", () => location.reload());
+  // Live-update z-score hint when sex or Hb changes
+  document.getElementById("gender").addEventListener("change", compute);
+  document.getElementById("hgb").addEventListener("input", compute);
+  compute();
+</script>
+</body>
+</html>
