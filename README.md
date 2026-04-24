@@ -1,7 +1,7 @@
 # OSA Risk Prediction Tool
 
 **Version:** v2.0  
-**Last updated:** 2026-04-15  
+**Last updated:** 2026-04-24  
 **Associated manuscript:** *Complete Blood Count Parameters Predict Obstructive Sleep Apnea in Chinese Adults: A Machine Learning Approach* (Manuscript ID: 593135, Nature and Science of Sleep)
 
 ---
@@ -43,8 +43,13 @@ The regression coefficients and nomogram scoring system implemented in this tool
 
 ## Development Cohort
 
-- **Study design:** Single-center retrospective cohort
-- **Sample size:** n = 5,828 (training: n = 4,079; validation: n = 1,749)
+- **Study design:** Single-center retrospective cohort with **temporal validation**
+- **Sample size:** n = 5,828
+    - **Training cohort (n = 4,330):** patients enrolled January 2018 – December 2022; 
+      used for feature selection, model development, and hyperparameter tuning
+    - **Validation cohort (n = 1,498):** patients enrolled January 2023 – March 2024; 
+      held out entirely from model development and used only for final performance 
+      assessment on temporally distinct data
 - **Population:** Adults referred for suspected OSA at a tertiary sleep center in China
 - **OSA prevalence in cohort:** 83.5%
 - **Outcome:** AHI ≥ 5 events/hour (binary classification)
@@ -53,7 +58,7 @@ The regression coefficients and nomogram scoring system implemented in this tool
 
 | Version | Date | Description |
 |---|---|---|
-| v2.0 | 2026-04-15 | Updated interface to align with manuscript Figure 7; improved layout, Hb z-score display, and risk stratification panel |
+| v2.0 | 2026-04-24 | Updated interface to align with manuscript Figure 7; improved layout, Hb z-score display, and risk stratification panel |
 | v1.0 | 2025-12-15 | Initial release |
 
 ## License
