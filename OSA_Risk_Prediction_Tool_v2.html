@@ -318,19 +318,19 @@
 
             <div class="field">
               <label>Age (years)</label>
-              <input id="age" type="number" step="1" value="45" />
+              <input id="age" type="number" step="1" value="42" />
               <span class="hint">10–100</span>
             </div>
 
             <div class="field">
               <label>BMI (kg/m²)</label>
-              <input id="bmi" type="number" step="0.01" value="26.5" />
+              <input id="bmi" type="number" step="0.01" value="27" />
               <span class="hint">10–55</span>
             </div>
 
             <div class="field">
               <label>Hemoglobin (g/L)</label>
-              <input id="hgb" type="number" step="1" value="149" />
+              <input id="hgb" type="number" step="1" value="150" />
               <span class="hint" id="hgbHint">Raw value; auto z-scored by sex</span>
             </div>
 
@@ -354,7 +354,7 @@
 
             <div class="field">
               <label>Platelet (×10⁹/L)</label>
-              <input id="plt" type="number" step="1" value="250" />
+              <input id="plt" type="number" step="1" value="240" />
               <span class="hint">50–450</span>
             </div>
 
@@ -428,50 +428,57 @@
 
 <script>
   // ============================================================
-  // SVG-calibrated constants (extracted from Nomogram_改.svg)
+  // SVG-calibrated constants (extracted from Nomogram_复制.svg -
+  //   the ridge-penalized version, matching Python sklearn C=0.05)
   //   viewBox: 0 0 1152 1008
-  //   All x0/len values come directly from <path class="st3"> baselines.
+  //   All x0/len values come directly from <path class="st0"> baselines.
   // ============================================================
 
   // ---- Points axis (top ruler): 0–100 ----
-  // <path d="M322.3,91.5h758.5"/>  ticks 0,10,...,100
-  const POINTS_X0  = 322.3;
-  const POINTS_LEN = 758.5;
+  // <path d="M322.28,91.46h758.52"/>  ticks 0,10,...,100
+  const POINTS_X0  = 322.28;
+  const POINTS_LEN = 758.52;
 
   // ---- Hemoglobin sex-specific z-score parameters (from training set) ----
-  // Source: nomo_R_LASSO9_Hb_zscore_v3.R, "第六.五部分"
+  // Source: nomo_R_LASSO9_Hb_zscore_v4_RIDGE.R, "第六.五部分"
   const HB_PARAMS = {
     male:   { mean: 152.6181, sd: 5.7128 },
     female: { mean: 136.1800, sd: 4.9982 }
   };
 
-  // ---- Variable axis definitions extracted from SVG ----
+  // ---- Variable axis definitions extracted from the NEW ridge SVG ----
   // Each entry corresponds to one row in the nomogram.
   // x0 = baseline left x, len = baseline width, range = [min, max] of tick labels.
   // Gender is categorical: Female at x0 (lower tick), Male at x0+len (upper tick).
+  // NOTE: lengths differ from v2 because ridge-penalized coefficients are
+  //       shrunken, changing each variable's proportional contribution.
   const AXES = {
-    gender: { x0: 322.3, len:  91.6, range: null,        label: "Gender"             }, // M159 baseline
-    age:    { x0: 322.3, len: 344.6, range: [10, 100],   label: "Age"                }, // M226.6
-    bmi:    { x0: 322.3, len: 618.9, range: [10, 55],    label: "BMI"                }, // M294.1
-    hgb_z:  { x0: 322.3, len: 758.5, range: [-3, 3],     label: "Hemoglobin (z)"     }, // M361.7
-    lymph:  { x0: 322.3, len: 162.6, range: [0, 5],      label: "Lymphocyte"         }, // M429.2
-    rdw:    { x0: 322.3, len:  97.3, range: [10, 18],    label: "RDW"                }, // M496.8
-    mch:    { x0: 322.3, len: 374.0, range: [24, 36],    label: "MCH"                }, // M564.4
-    plt:    { x0: 322.3, len:  58.7, range: [50, 450],   label: "Platelet"           }, // M631.9 H381
-    mpv:    { x0: 322.3, len:  62.1, range: [6, 15],     label: "MPV"                }, // M699.5
+    gender: { x0: 322.28, len:  83.59, range: null,        label: "Gender"             }, // y=159.02
+    age:    { x0: 322.28, len: 341.82, range: [10, 100],   label: "Age"                }, // y=226.58
+    bmi:    { x0: 322.28, len: 630.91, range: [10, 55],    label: "BMI"                }, // y=294.13
+    hgb_z:  { x0: 322.28, len: 758.52, range: [-3, 3],     label: "Hemoglobin (z)"     }, // y=361.69
+    lymph:  { x0: 322.28, len: 175.05, range: [0, 5],      label: "Lymphocyte"         }, // y=429.25
+    rdw:    { x0: 322.28, len: 111.09, range: [10, 18],    label: "RDW"                }, // y=496.80
+    mch:    { x0: 322.28, len: 386.75, range: [24, 36],    label: "MCH"                }, // y=564.36
+    plt:    { x0: 322.28, len:  62.11, range: [50, 450],   label: "Platelet"           }, // y=631.91
+    mpv:    { x0: 322.28, len:  65.41, range: [6, 15],     label: "MPV"                }, // y=699.46
   };
 
   // ---- Total Points axis: 0–240 ----
-  // <path d="M322.3,767h758.5"/>  ticks 0,20,...,240 (13 ticks)
-  const TOTAL_X0    = 322.3;
-  const TOTAL_LEN   = 758.5;
+  // <path d="M322.28,767.02h758.52"/>  ticks 0,20,...,240 (13 ticks,
+  // decoded from label character patterns: 1/2/2/2/2/3/3/3/3/3/3/3/3 digits)
+  const TOTAL_X0    = 322.28;
+  const TOTAL_LEN   = 758.52;
   const TOTAL_RANGE = [0, 240];
 
-  // ---- Linear Predictor axis: -6 to 10 ----
-  // <path d="M537.3,834.6h497"/>  ticks -6,-4,...,10 (9 ticks, 62.1 px apart)
-  const LP_X0    = 537.3;
-  const LP_LEN   = 497.0;
-  const LP_RANGE = [-6, 10];
+  // ---- Linear Predictor axis: -5 to +9 ----
+  // <path d="M551.11,834.58h490.29"/>  15 integer ticks at 35.02 px/unit
+  // (decoded via the Risk axis: 0.01→0.99 spans logit(-4.595)→logit(+4.595)
+  //  over 321.85 px, giving 35.02 px per LP unit; extrapolation to the LP
+  //  baseline endpoints yields exactly [-5, +9])
+  const LP_X0    = 551.11;
+  const LP_LEN   = 490.29;
+  const LP_RANGE = [-5, 9];
 
   // ============================================================
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
