@@ -414,7 +414,7 @@
           <div class="footnote">
             Computation: Nomogram → total points → LP → probability.<br>
             <b>Note on Hemoglobin:</b> The model uses a sex-specific z-score
-            (Male: μ=152.6181, σ=5.7128;&nbsp; Female: μ=136.1800, σ=4.9982),
+            (Male: μ=152.66, σ=5.7;&nbsp; Female: μ=136.20, σ=5.0),
             so the same raw Hb value can score very differently for males vs.
             females. e.g. Hb=150 g/L → z=−0.46 in males (typical) but z=+2.77
             in females (top 0.3%), and the latter contributes far more points.
@@ -442,8 +442,8 @@
   // ---- Hemoglobin sex-specific z-score parameters (from training set) ----
   // Source: nomo_R_LASSO9_Hb_zscore_v4_RIDGE.R, "第六.五部分"
   const HB_PARAMS = {
-    male:   { mean: 152.6181, sd: 5.7128 },
-    female: { mean: 136.1800, sd: 4.9982 }
+    male:   { mean: 152.66, sd: 5.7 },
+    female: { mean: 136.20, sd: 5.0 }
   };
 
   // ---- Variable axis definitions extracted from the NEW ridge SVG ----
