@@ -2,7 +2,9 @@
 
 **Version:** v2.0  
 **Last updated:** 2026-05-08  
-**Associated manuscript:** *Complete Blood Count Parameters Predict Obstructive Sleep Apnea in Chinese Adults: A Machine Learning Approach* (Manuscript ID: 593135, Nature and Science of Sleep)
+**Associated manuscript:** "Integrating Complete Blood Count Parameters with Demographic 
+         Characteristics for Obstructive Sleep Apnea Prediction in 
+         Chinese Adults: A Machine Learning Approach"
 
 ---
 
