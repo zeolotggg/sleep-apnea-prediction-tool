@@ -28,7 +28,7 @@ The model incorporates the following **9 variables**:
 | Platelet count | ×10⁹/L |
 | Mean platelet volume (MPV) | fL |
 
-> **Note:** Hemoglobin is entered as a raw value (g/L) and internally converted to a sex-specific z-score using training cohort parameters (Male: mean = 152.62, SD = 5.71; Female: mean = 136.18, SD = 5.00).
+> **Note:** Hemoglobin is entered as a raw value (g/L) and internally converted to a sex-specific z-score using training cohort parameters (Male: mean = 152.66, SD = 5.7; Female: mean = 136.20, SD = 5.0).
 
 ## Model Lock Statement
 
